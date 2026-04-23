@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klassenchat</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+  <h1>Klassenchat</h1>
+  <form method="POST" class="username-area">
+    <input type="hidden" name="action" value="set_username">
+    <input type="text" name="username" placeholder="Dein Name"
+           value="{{ current_user or '' }}" maxlength="50">
+    <button type="submit">Name setzen</button>
+  </form>
+  {% if current_user %}
+    <span id="user-status">Eingeloggt als: <strong>{{ current_user }}</strong></span>
+  {% else %}
+    <span id="user-status" class="anonymous">Kein Name gesetzt — du sendest als <strong>Anonym</strong></span>
+  {% endif %}
+</header>
+
+<main>
+  {% if error %}
+    <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <div id="messages">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="message {% if msg.sender == current_user and not msg.is_anonym %}own{% endif %}">
+          <div class="meta">
+            <span class="sender">{{ msg.sender }}</span>
+            <span class="time">{{ msg.sent_at }}</span>
+            {% if msg.sender == current_user and not msg.is_anonym %}
+              <form method="POST" class="delete-form">
+                <input type="hidden" name="action" value="delete_message">
+                <input type="hidden" name="message_id" value="{{ msg.id }}">
+                <button type="submit" class="delete-btn">Löschen</button>
+              </form>
+            {% endif %}
+          </div>
+          <div class="content">{{ msg.content }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-hint">Noch keine Nachrichten — schreib die erste!</p>
+    {% endif %}
+  </div>
+</main>
+
+<footer>
+  <form method="POST" class="send-area">
+    <input type="hidden" name="action" value="send_message">
+    <input type="text" name="content" id="content-input"
+           placeholder="Nachricht eingeben..."
+           value="{{ prefill_content }}"
+           maxlength="500" autocomplete="off">
+    <button type="submit">Senden</button>
+  </form>
+</footer>
+
+</body>
+</html>

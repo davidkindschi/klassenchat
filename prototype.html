@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klassenchat – UI Prototype</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.2rem; margin-right: auto; }
+
+    .username-area { display: flex; gap: 8px; align-items: center; }
+    .username-area input {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .username-area button {
+      padding: 6px 12px;
+      background: white;
+      color: #2563eb;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    #user-status {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      width: 100%;
+    }
+    #user-status.anonymous { color: #fbbf24; }
+
+    main { flex: 1; overflow-y: auto; padding: 16px; }
+
+    #error-box {
+      display: none;
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    #messages {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      background: white;
+      border-radius: 8px;
+      padding: 10px 14px;
+      max-width: 70%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      align-self: flex-start;
+    }
+    .message.own {
+      align-self: flex-end;
+      background: #dbeafe;
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+    }
+    .sender { font-weight: 600; color: #1e40af; }
+    .time { color: #6b7280; }
+
+    .delete-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0;
+    }
+    .delete-btn:hover { text-decoration: underline; }
+
+    .content { font-size: 0.95rem; color: #111827; word-break: break-word; }
+
+    #empty-hint {
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      background: white;
+      padding: 12px 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .send-area { display: flex; gap: 8px; }
+    .send-area input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .send-area input:focus { border-color: #2563eb; }
+    .send-area button {
+      padding: 10px 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .send-area button:hover { background: #1d4ed8; }
+
+    .char-count {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      text-align: right;
+      margin-top: 4px;
+    }
+    .char-count.warn { color: #ef4444; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Klassenchat</h1>
+  <div class="username-area">
+    <input type="text" id="username-input" placeholder="Dein Name" maxlength="50">
+    <button onclick="setUsername()">Name setzen</button>
+  </div>
+  <span id="user-status" class="anonymous">Kein Name gesetzt — du sendest als <strong>Anonym</strong></span>
+</header>
+
+<main>
+  <div id="error-box"></div>
+  <div id="messages">
+    <p id="empty-hint">Noch keine Nachrichten — schreib die erste!</p>
+  </div>
+</main>
+
+<footer>
+  <div class="send-area">
+    <input type="text" id="content-input" placeholder="Nachricht eingeben..."
+           maxlength="500" autocomplete="off" onkeydown="handleEnter(event)" oninput="updateCharCount()">
+    <button onclick="sendMessage()">Senden</button>
+  </div>
+  <div class="char-count" id="char-count">0 / 500</div>
+</footer>
+
+<script>
+  let currentUser = null;
+  let messages = [];
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function nowUTC() {
+    const d = new Date();
+    return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    box.textContent = msg;
+    box.style.display = 'block';
+    setTimeout(() => box.style.display = 'none', 4000);
+  }
+
+  function clearError() {
+    document.getElementById('error-box').style.display = 'none';
+  }
+
+  function setUsername() {
+    const input = document.getElementById('username-input');
+    const name = input.value.trim();
+    if (!name) return;
+    currentUser = name;
+    const status = document.getElementById('user-status');
+    status.classList.remove('anonymous');
+    status.innerHTML = `Eingeloggt als: <strong>${escapeHtml(name)}</strong>`;
+    clearError();
+    render();
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('content-input');
+    const raw = input.value;
+    const content = raw.trim();
+
+    if (!content) {
+      showError('Nachricht darf nicht leer sein.');
+      return;
+    }
+    if (content.length > 500) {
+      showError(`Nachricht zu lang (${content.length}/500 Zeichen).`);
+      return;
+    }
+
+    messages.push({
+      id: crypto.randomUUID(),
+      sender: currentUser || 'Anonym',
+      content: content,
+      sent_at: nowUTC(),
+      is_anonym: !currentUser,
+    });
+
+    input.value = '';
+    updateCharCount();
+    clearError();
+    render();
+    scrollToBottom();
+  }
+
+  function deleteMessage(id) {
+    messages = messages.filter(m => !(m.id === id && m.sender === currentUser));
+    render();
+  }
+
+  function handleEnter(event) {
+    if (event.key === 'Enter') sendMessage();
+  }
+
+  function updateCharCount() {
+    const len = document.getElementById('content-input').value.length;
+    const el = document.getElementById('char-count');
+    el.textContent = `${len} / 500`;
+    el.classList.toggle('warn', len > 450);
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function render() {
+    const container = document.getElementById('messages');
+    const hint = document.getElementById('empty-hint');
+
+    if (messages.length === 0) {
+      container.innerHTML = '';
+      container.appendChild(hint);
+      return;
+    }
+
+    container.innerHTML = messages.map(m => {
+      const isOwn = currentUser && m.sender === currentUser;
+      const canDelete = isOwn && !m.is_anonym;
+      return `
+        <div class="message ${isOwn ? 'own' : ''}">
+          <div class="meta">
+            <span class="sender">${escapeHtml(m.sender)}</span>
+            <span class="time">${escapeHtml(m.sent_at)}</span>
+            ${canDelete ? `<button class="delete-btn" onclick="deleteMessage('${m.id}')">Löschen</button>` : ''}
+          </div>
+          <div class="content">${escapeHtml(m.content)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function scrollToBottom() {
+    const main = document.querySelector('main');
+    main.scrollTop = main.scrollHeight;
+  }
+</script>
+</body>
+</html>

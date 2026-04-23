@@ -1,0 +1,132 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+/* ── Header ── */
+header {
+  background: #2563eb;
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+header h1 { font-size: 1.2rem; margin-right: auto; }
+
+.username-area { display: flex; gap: 8px; }
+.username-area input {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+.username-area button {
+  padding: 6px 12px;
+  background: white;
+  color: #2563eb;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+#user-status {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  width: 100%;
+}
+#user-status.anonymous { color: #fbbf24; }
+
+/* ── Main / Message list ── */
+main { flex: 1; overflow-y: auto; padding: 16px; }
+
+.error-box {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+#messages { display: flex; flex-direction: column; gap: 10px; }
+
+.message {
+  background: white;
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-width: 70%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  align-self: flex-start;
+}
+.message.own {
+  align-self: flex-end;
+  background: #dbeafe;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+.sender { font-weight: 600; color: #1e40af; }
+.time { color: #6b7280; }
+
+.delete-form { margin-left: auto; }
+.delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+}
+.delete-btn:hover { text-decoration: underline; }
+
+.content { font-size: 0.95rem; color: #111827; word-break: break-word; }
+
+.empty-hint {
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 0.95rem;
+}
+
+/* ── Footer / Send area ── */
+footer {
+  background: white;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.send-area { display: flex; gap: 8px; }
+.send-area input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+}
+.send-area input:focus { border-color: #2563eb; }
+.send-area button {
+  padding: 10px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.send-area button:hover { background: #1d4ed8; }
