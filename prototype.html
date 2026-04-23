@@ -3,176 +3,253 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klassenchat – UI Prototype</title>
+  <title>Klassenchat – UI Prototype (FHNW)</title>
+  <script>
+    (function () {
+      const saved = localStorage.getItem('theme');
+      const pref = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', pref);
+    })();
+  </script>
   <style>
+    /* ── FHNW Design Tokens ── */
+    :root {
+      --fhnw-yellow:    #FDE70E;
+      --fhnw-yellow-dk: #d4c000;
+      --bg:          #f1f1ee;
+      --surface:     #ffffff;
+      --surface-own: #fdf9d0;
+      --border:      #d8d8d5;
+      --text:        #111111;
+      --text-muted:  #666666;
+      --text-sender: #7a6b00;
+      --error-bg:    #fde8ed;
+      --error-text:  #a01f3e;
+      --error-border:#df305b;
+      --shadow:      rgba(0,0,0,0.08);
+    }
+    [data-theme="dark"] {
+      --bg:          #1a1a1a;
+      --surface:     #2a2a2a;
+      --surface-own: #2e2c10;
+      --border:      #3a3a3a;
+      --text:        #f1f1ee;
+      --text-muted:  #999999;
+      --text-sender: #c8b800;
+      --error-bg:    #3a1520;
+      --error-text:  #f07090;
+      --error-border:#df305b;
+      --shadow:      rgba(0,0,0,0.3);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
       display: flex;
       flex-direction: column;
       height: 100vh;
-      background: #f5f5f5;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.2s, color 0.2s;
     }
 
+    /* ── Header ── */
     header {
-      background: #2563eb;
-      color: white;
-      padding: 12px 16px;
+      background: var(--fhnw-yellow);
+      color: #111111;
+      padding: 0 16px;
       display: flex;
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
+      min-height: 56px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
-    header h1 { font-size: 1.2rem; margin-right: auto; }
+    .header-title { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+    .fhnw-mark {
+      background: #111111;
+      color: var(--fhnw-yellow);
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 3px 6px;
+      border-radius: 2px;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; color: #111111; }
 
     .username-area { display: flex; gap: 8px; align-items: center; }
     .username-area input {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      padding: 7px 11px;
+      border: 2px solid rgba(0,0,0,0.25);
+      border-radius: 3px;
+      font-size: 0.875rem;
+      background: rgba(255,255,255,0.6);
+      color: #111111;
+      outline: none;
+      transition: border-color 0.15s;
     }
-    .username-area button {
-      padding: 6px 12px;
-      background: white;
-      color: #2563eb;
+    .username-area input::placeholder { color: rgba(0,0,0,0.45); }
+    .username-area input:focus { border-color: rgba(0,0,0,0.7); }
+
+    .btn-secondary {
+      padding: 7px 14px;
+      background: #111111;
+      color: var(--fhnw-yellow);
       border: none;
-      border-radius: 4px;
+      border-radius: 3px;
       cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.875rem;
+      font-weight: 700;
     }
+    .btn-secondary:hover { opacity: 0.82; }
+
+    .theme-toggle {
+      background: none;
+      border: 2px solid rgba(0,0,0,0.35);
+      border-radius: 3px;
+      color: #111111;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 5px 9px;
+      line-height: 1;
+    }
+    .theme-toggle:hover { border-color: #111111; }
 
     #user-status {
-      font-size: 0.85rem;
-      opacity: 0.9;
+      font-size: 0.8rem;
+      color: rgba(0,0,0,0.65);
       width: 100%;
+      padding: 4px 0 8px;
     }
-    #user-status.anonymous { color: #fbbf24; }
+    #user-status.anonymous { color: #7a3000; font-weight: 500; }
 
+    /* ── Main ── */
     main { flex: 1; overflow-y: auto; padding: 16px; }
 
     #error-box {
       display: none;
-      background: #fee2e2;
-      color: #dc2626;
+      background: var(--error-bg);
+      color: var(--error-text);
+      border-left: 4px solid var(--error-border);
       padding: 10px 14px;
-      border-radius: 6px;
-      margin-bottom: 12px;
-      font-size: 0.9rem;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      font-size: 0.875rem;
     }
 
-    #messages {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    #messages { display: flex; flex-direction: column; gap: 10px; }
 
     .message {
-      background: white;
-      border-radius: 8px;
+      background: var(--surface);
+      border-radius: 4px;
       padding: 10px 14px;
-      max-width: 70%;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      max-width: 72%;
+      box-shadow: 0 1px 3px var(--shadow);
       align-self: flex-start;
+      border: 1px solid var(--border);
+      transition: background 0.2s;
     }
     .message.own {
       align-self: flex-end;
-      background: #dbeafe;
+      background: var(--surface-own);
+      border-left: 3px solid var(--fhnw-yellow);
     }
 
-    .meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-      font-size: 0.8rem;
-    }
-    .sender { font-weight: 600; color: #1e40af; }
-    .time { color: #6b7280; }
+    .meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.78rem; }
+    .sender { font-weight: 700; color: var(--text-sender); }
+    .time   { color: var(--text-muted); }
 
     .delete-btn {
       margin-left: auto;
       background: none;
       border: none;
-      color: #ef4444;
+      color: var(--text-muted);
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       padding: 0;
     }
-    .delete-btn:hover { text-decoration: underline; }
+    .delete-btn:hover { color: #a01f3e; }
 
-    .content { font-size: 0.95rem; color: #111827; word-break: break-word; }
+    .content { font-size: 0.925rem; color: var(--text); word-break: break-word; line-height: 1.5; }
 
-    #empty-hint {
-      color: #9ca3af;
+    .empty-hint {
+      color: var(--text-muted);
       text-align: center;
-      margin-top: 40px;
-      font-size: 0.95rem;
+      margin-top: 48px;
+      font-size: 0.925rem;
+      border: 2px dashed var(--border);
+      padding: 32px;
+      border-radius: 4px;
     }
 
+    /* ── Footer ── */
     footer {
-      background: white;
+      background: var(--surface);
       padding: 12px 16px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 3px solid var(--fhnw-yellow);
+      transition: background 0.2s;
     }
     .send-area { display: flex; gap: 8px; }
     .send-area input {
       flex: 1;
       padding: 10px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 0.925rem;
       outline: none;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.15s, background 0.2s;
     }
-    .send-area input:focus { border-color: #2563eb; }
-    .send-area button {
-      padding: 10px 20px;
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-    .send-area button:hover { background: #1d4ed8; }
+    .send-area input:focus { border-color: var(--fhnw-yellow-dk); }
+    .send-area input::placeholder { color: var(--text-muted); }
 
-    .char-count {
-      font-size: 0.75rem;
-      color: #9ca3af;
-      text-align: right;
-      margin-top: 4px;
+    .btn-primary {
+      padding: 10px 22px;
+      background: var(--fhnw-yellow);
+      color: #111111;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.925rem;
+      font-weight: 700;
+      white-space: nowrap;
     }
-    .char-count.warn { color: #ef4444; }
+    .btn-primary:hover { background: var(--fhnw-yellow-dk); }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Klassenchat</h1>
+  <div class="header-title">
+    <span class="fhnw-mark">FHNW</span>
+    <h1>Klassenchat</h1>
+  </div>
+
   <div class="username-area">
     <input type="text" id="username-input" placeholder="Dein Name" maxlength="50">
-    <button onclick="setUsername()">Name setzen</button>
+    <button class="btn-secondary" onclick="setUsername()">Name setzen</button>
   </div>
+
+  <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">&#9680;</button>
+
   <span id="user-status" class="anonymous">Kein Name gesetzt — du sendest als <strong>Anonym</strong></span>
 </header>
 
 <main>
   <div id="error-box"></div>
   <div id="messages">
-    <p id="empty-hint">Noch keine Nachrichten — schreib die erste!</p>
+    <p class="empty-hint">Noch keine Nachrichten — schreib die erste!</p>
   </div>
 </main>
 
 <footer>
   <div class="send-area">
     <input type="text" id="content-input" placeholder="Nachricht eingeben..."
-           maxlength="500" autocomplete="off" onkeydown="handleEnter(event)" oninput="updateCharCount()">
-    <button onclick="sendMessage()">Senden</button>
+           maxlength="500" autocomplete="off" onkeydown="handleEnter(event)">
+    <button class="btn-primary" onclick="sendMessage()">Senden</button>
   </div>
-  <div class="char-count" id="char-count">0 / 500</div>
 </footer>
 
 <script>
@@ -180,10 +257,15 @@
   let messages = [];
 
   function pad(n) { return String(n).padStart(2, '0'); }
-
   function nowUTC() {
     const d = new Date();
     return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  }
+
+  function toggleTheme() {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
   }
 
   function showError(msg) {
@@ -193,49 +275,31 @@
     setTimeout(() => box.style.display = 'none', 4000);
   }
 
-  function clearError() {
-    document.getElementById('error-box').style.display = 'none';
-  }
-
   function setUsername() {
-    const input = document.getElementById('username-input');
-    const name = input.value.trim();
+    const name = document.getElementById('username-input').value.trim();
     if (!name) return;
     currentUser = name;
-    const status = document.getElementById('user-status');
-    status.classList.remove('anonymous');
-    status.innerHTML = `Eingeloggt als: <strong>${escapeHtml(name)}</strong>`;
-    clearError();
+    const s = document.getElementById('user-status');
+    s.classList.remove('anonymous');
+    s.innerHTML = `Angemeldet als <strong>${escapeHtml(name)}</strong>`;
     render();
   }
 
   function sendMessage() {
     const input = document.getElementById('content-input');
-    const raw = input.value;
-    const content = raw.trim();
-
-    if (!content) {
-      showError('Nachricht darf nicht leer sein.');
-      return;
-    }
-    if (content.length > 500) {
-      showError(`Nachricht zu lang (${content.length}/500 Zeichen).`);
-      return;
-    }
-
+    const content = input.value.trim();
+    if (!content) { showError('Nachricht darf nicht leer sein.'); return; }
+    if (content.length > 500) { showError(`Nachricht zu lang (${content.length}/500 Zeichen).`); return; }
     messages.push({
       id: crypto.randomUUID(),
       sender: currentUser || 'Anonym',
-      content: content,
+      content,
       sent_at: nowUTC(),
       is_anonym: !currentUser,
     });
-
     input.value = '';
-    updateCharCount();
-    clearError();
     render();
-    scrollToBottom();
+    document.querySelector('main').scrollTop = document.querySelector('main').scrollHeight;
   }
 
   function deleteMessage(id) {
@@ -243,49 +307,29 @@
     render();
   }
 
-  function handleEnter(event) {
-    if (event.key === 'Enter') sendMessage();
-  }
+  function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
 
-  function updateCharCount() {
-    const len = document.getElementById('content-input').value.length;
-    const el = document.getElementById('char-count');
-    el.textContent = `${len} / 500`;
-    el.classList.toggle('warn', len > 450);
-  }
-
-  function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function render() {
     const container = document.getElementById('messages');
-    const hint = document.getElementById('empty-hint');
-
-    if (messages.length === 0) {
-      container.innerHTML = '';
-      container.appendChild(hint);
+    if (!messages.length) {
+      container.innerHTML = '<p class="empty-hint">Noch keine Nachrichten — schreib die erste!</p>';
       return;
     }
-
     container.innerHTML = messages.map(m => {
-      const isOwn = currentUser && m.sender === currentUser;
-      const canDelete = isOwn && !m.is_anonym;
-      return `
-        <div class="message ${isOwn ? 'own' : ''}">
-          <div class="meta">
-            <span class="sender">${escapeHtml(m.sender)}</span>
-            <span class="time">${escapeHtml(m.sent_at)}</span>
-            ${canDelete ? `<button class="delete-btn" onclick="deleteMessage('${m.id}')">Löschen</button>` : ''}
-          </div>
-          <div class="content">${escapeHtml(m.content)}</div>
-        </div>`;
+      const isOwn = currentUser && m.sender === currentUser && !m.is_anonym;
+      return `<div class="message ${isOwn ? 'own' : ''}">
+        <div class="meta">
+          <span class="sender">${escapeHtml(m.sender)}</span>
+          <span class="time">${escapeHtml(m.sent_at)}</span>
+          ${isOwn ? `<button class="delete-btn" onclick="deleteMessage('${m.id}')">Löschen</button>` : ''}
+        </div>
+        <div class="content">${escapeHtml(m.content)}</div>
+      </div>`;
     }).join('');
-  }
-
-  function scrollToBottom() {
-    const main = document.querySelector('main');
-    main.scrollTop = main.scrollHeight;
   }
 </script>
 </body>
